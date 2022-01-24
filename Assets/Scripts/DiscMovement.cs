@@ -7,10 +7,15 @@ public class DiscMovement : MonoBehaviour {
     public DiscAttributes disc;
     public Camera cam;
     public float power;
-    public float stableSpeed;
+    public float speed;
+    public float glide;
+    public float turn;
+    public float fade;
 
+    
+    private float baseStableSpeed = 12;
     private Vector3 cameraVector;
-    private double stopMagnitude = 0.05;
+    private double stopMagnitude = 0.1;
 
     void Start () {
         Rigidbody rb = GetComponent<Rigidbody> ();
@@ -35,13 +40,13 @@ public class DiscMovement : MonoBehaviour {
 
         // approximate drag
         float airDensity = 1.225f;
-        float wingArea = transform.localScale.x * transform.localScale.y;
-        float wingDragCoefficient = 0.6f; // 0.81f
-        float radius = transform.localScale.x / 2;
+        float wingArea = (transform.localScale.x * 0.3f) * (transform.localScale.y * 0.015f);
+        float wingDragCoefficient = 1f - (speed / 25);
+        float radius = transform.localScale.x * 0.3f / 2;
         float flightPlateArea = (float)(Mathf.PI * radius * radius);
         float flightPlateDragCoefficient = 1.12f;
 
-        float pctWing = Vector3.Cross(transform.transform.up.normalized, v.normalized).magnitude;
+        float pctWing = Vector3.Cross(up().normalized, v.normalized).magnitude;
         float dragCoefficient = wingDragCoefficient * pctWing + flightPlateDragCoefficient * (1 - pctWing);
         float crossSectionArea = wingArea * pctWing + flightPlateArea * (1 - pctWing);
 
@@ -52,25 +57,28 @@ public class DiscMovement : MonoBehaviour {
 
         // approximate lift
         float angleCutoff = 85;
-        float flightAngle = Vector3.Angle(transform.transform.up.normalized, v.normalized);
-        float liftForce = (float) Math.Max ((v.magnitude / 9), 0);
+        float flightAngle = Vector3.Angle(up().normalized, v.normalized);
+        double glideFactor = 1 + (glide / 30);
+        float liftForce = (float) Math.Abs (v.magnitude / 10 * glideFactor);
         if (liftForce > 0.1 && flightAngle > angleCutoff) {
-            rb.AddForce (transform.up * (liftForce + liftForce * (flightAngle - angleCutoff) / angleCutoff));
+            rb.AddForce (up() * (liftForce + liftForce * (flightAngle - angleCutoff) / angleCutoff));
         } else if (liftForce > 0.1 && flightAngle < angleCutoff) {
-            rb.AddForce (-transform.up * liftForce * (angleCutoff - flightAngle) / angleCutoff);
+            rb.AddForce (-up() * liftForce * (angleCutoff - flightAngle) / angleCutoff);
         }
 
         // add turn or fade
-        double baseTurn = 0.02;
-        double baseFade = 0.03;
+        double modifiedTurn = (turn / 100) + (speed / 500);
+        double modifiedFade = (fade / 100) + (speed / 200);
+        double stableSpeed = baseStableSpeed + turn + fade + (speed / 10);
+
         Vector3 angularVelocity = rb.angularVelocity;
         if (v.magnitude > stableSpeed) {
-            transform.RotateAround(new Vector3 (-v.x, 0, -v.z), degreesToRadians(baseTurn * (v.magnitude - stableSpeed)));
-        } else if (v.magnitude < stableSpeed && v.magnitude > 1 && transform.up.y > 0) {
-            transform.RotateAround(new Vector3 (-v.x, 0, -v.z), degreesToRadians(baseFade * (v.magnitude - stableSpeed)));
+            transform.RotateAround(new Vector3 (-v.x, 0, -v.z), degreesToRadians(modifiedTurn * (v.magnitude - stableSpeed)));
+        } else if (v.magnitude < stableSpeed && v.magnitude > 1 && up().y > 0) {
+            transform.RotateAround(new Vector3 (-v.x, 0, -v.z), degreesToRadians(modifiedFade * (v.magnitude - stableSpeed)));
         }
         rb.angularVelocity = new Vector3(0, 0, 0);
-        rb.AddTorque (transform.up * angularVelocity.magnitude, ForceMode.VelocityChange);
+        rb.AddTorque (up() * angularVelocity.magnitude, ForceMode.VelocityChange);
     }
 
     /*
@@ -86,16 +94,24 @@ public class DiscMovement : MonoBehaviour {
             disc.inFlight = true;
             rb.isKinematic = false;
             rb.AddForce (cameraVector * power);
-            rb.AddTorque (transform.up * power, ForceMode.VelocityChange);
+            rb.AddTorque (up() * power, ForceMode.VelocityChange);
             return;
-        } else if (Input.GetKeyDown (KeyCode.W) && disc.isThrowable && transform.up.y > 0) {
+        } else if (Input.GetKeyDown (KeyCode.W) && disc.isThrowable && up().y > 0) {
             transform.RotateAround(new Vector3(cameraVector.z, cameraVector.y, -cameraVector.x), degreesToRadians(-1));
-        } else if (Input.GetKeyDown (KeyCode.A) && disc.isThrowable && transform.up.y > 0) {
+        } else if (Input.GetKeyDown (KeyCode.A) && disc.isThrowable && up().y > 0) {
             transform.RotateAround(cameraVector, degreesToRadians(1));
-        } else if (Input.GetKeyDown (KeyCode.S) && disc.isThrowable && transform.up.y > 0) {
+        } else if (Input.GetKeyDown (KeyCode.S) && disc.isThrowable && up().y > 0) {
             transform.RotateAround(new Vector3(cameraVector.z, cameraVector.y, -cameraVector.x), degreesToRadians(1));
-        } else if (Input.GetKeyDown (KeyCode.D) && disc.isThrowable && transform.up.y > 0) {
+        } else if (Input.GetKeyDown (KeyCode.D) && disc.isThrowable && up().y > 0) {
             transform.RotateAround(cameraVector, degreesToRadians(-1));
+        } else if (Input.GetKeyDown (KeyCode.Alpha1) && disc.isThrowable) {
+            setDisc("putter");
+        } else if (Input.GetKeyDown (KeyCode.Alpha2) && disc.isThrowable) {
+            setDisc("midrange");
+        } else if (Input.GetKeyDown (KeyCode.Alpha3) && disc.isThrowable) {
+            setDisc("fairway");
+        } else if (Input.GetKeyDown (KeyCode.Alpha4) && disc.isThrowable) {
+            setDisc("driver");
         } else if (disc.inFlight && v.magnitude < stopMagnitude) {
             rb.isKinematic = true;
             disc.inFlight = false;
@@ -107,9 +123,9 @@ public class DiscMovement : MonoBehaviour {
             Vector3 pos = transform.position;
             pos.y = pos.y + 1;
             transform.position = pos;
-            transform.localEulerAngles = new Vector3 (0, 0, 0);
+            transform.rotation = Quaternion.Euler(new Vector3(180, 0, 0));
         }
-        if (Input.GetMouseButtonDown (2)) {
+        if (Input.GetKeyDown (KeyCode.P)) {
             Debug.Log ("Angular velocity: " + rb.angularVelocity);
             Debug.Log ("Magnitude: " + v.magnitude);
             Debug.Log ("Velocity: " + v.normalized);
@@ -117,7 +133,40 @@ public class DiscMovement : MonoBehaviour {
         }
     }
 
+    private Vector3 up() {
+        return -transform.up;
+    }
+
     private float degreesToRadians(double degrees) {
         return (float)(2 * Math.PI / 360 * degrees);
+    }
+
+    private void setDisc(string discType) {
+        switch (discType) {
+            case "driver":
+                speed = 12;
+                glide = 5;
+                turn = -1;
+                fade = 2;
+                break;
+            case "fairway":
+                speed = 7;
+                glide = 5;
+                turn = -1;
+                fade = 2;
+                break;
+            case "midrange":
+                speed = 5;
+                glide = 4;
+                turn = -1;
+                fade = 1;
+                break;
+            case "putter":
+                speed = 2;
+                glide = 4;
+                turn = 0;
+                fade = 1;
+                break;
+        }
     }
 }
