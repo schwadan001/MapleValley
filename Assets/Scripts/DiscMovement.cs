@@ -16,6 +16,7 @@ public class DiscMovement : MonoBehaviour {
     private float baseStableSpeed = 12;
     private Vector3 cameraVector;
     private double stopMagnitude = 0.1;
+    private DateTime throwStart;
 
     void Start () {
         Rigidbody rb = GetComponent<Rigidbody> ();
@@ -68,7 +69,7 @@ public class DiscMovement : MonoBehaviour {
 
         // add turn or fade
         double modifiedTurn = (turn / 100) + (speed / 500);
-        double modifiedFade = (fade / 100) + (speed / 200);
+        double modifiedFade = (fade / 100) + (speed / 300);
         double stableSpeed = baseStableSpeed + turn + fade + (speed / 10);
 
         Vector3 angularVelocity = rb.angularVelocity;
@@ -95,6 +96,7 @@ public class DiscMovement : MonoBehaviour {
             rb.isKinematic = false;
             rb.AddForce (cameraVector * power);
             rb.AddTorque (up() * power, ForceMode.VelocityChange);
+            throwStart = DateTime.UtcNow;
             return;
         } else if (Input.GetKeyDown (KeyCode.W) && disc.isThrowable && up().y > 0) {
             transform.RotateAround(new Vector3(cameraVector.z, cameraVector.y, -cameraVector.x), degreesToRadians(-1));
@@ -112,7 +114,7 @@ public class DiscMovement : MonoBehaviour {
             setDisc("fairway");
         } else if (Input.GetKeyDown (KeyCode.Alpha4) && disc.isThrowable) {
             setDisc("driver");
-        } else if (disc.inFlight && v.magnitude < stopMagnitude) {
+        } else if (disc.inFlight && v.magnitude < stopMagnitude && Math.Abs((DateTime.UtcNow - throwStart).TotalSeconds) > 1) {
             rb.isKinematic = true;
             disc.inFlight = false;
             disc.canBePickedUp = true;
