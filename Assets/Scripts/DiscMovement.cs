@@ -13,9 +13,9 @@ public class DiscMovement : MonoBehaviour {
     public float fade;
 
     
-    private float baseStableSpeed = 12;
+    private float baseStableSpeed = 13;
     private Vector3 cameraVector;
-    private double stopMagnitude = 0.1;
+    private double stopMagnitude = 0.15;
     private DateTime throwStart;
 
     void Start () {
@@ -68,9 +68,9 @@ public class DiscMovement : MonoBehaviour {
         }
 
         // add turn or fade
-        double modifiedTurn = (turn / 100) + (speed / 500);
-        double modifiedFade = (fade / 100) + (speed / 300);
-        double stableSpeed = baseStableSpeed + turn + fade + (speed / 10);
+        double modifiedTurn = (-turn / 400) + (speed / 300);
+        double modifiedFade = (fade / 70) + (speed / 400);
+        double stableSpeed = baseStableSpeed + ((turn + fade) / 2) + (speed / 10);
 
         Vector3 angularVelocity = rb.angularVelocity;
         if (v.magnitude > stableSpeed) {
