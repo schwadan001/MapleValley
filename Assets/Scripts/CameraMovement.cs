@@ -1,10 +1,12 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class CameraMovement : MonoBehaviour
 {
-    public DiscAttributes disc;
+    public DiscAttributes discAttr;
+    public Rigidbody discRb;
     public Camera cam;
     public Transform target;
     public float distanceToTarget;
@@ -26,10 +28,11 @@ public class CameraMovement : MonoBehaviour
     
     // Camera rotate source: https://www.emmaprats.com/p/how-to-rotate-the-camera-around-an-object-in-unity3d
     void LateUpdate() {
-        if (Input.GetMouseButtonDown(0)) {
+        float curDistanceToTarget = Vector3.Distance(cam.transform.position, target.transform.position);
+        if (Input.GetMouseButtonDown(0) && !discAttr.inFlight) {
             previousPosition = cam.ScreenToViewportPoint(Input.mousePosition);
         }
-        else if (Input.GetMouseButton(0)) {
+        else if (Input.GetMouseButton(0) && !discAttr.inFlight) {
             // reposition camera
             Vector3 newPosition = cam.ScreenToViewportPoint(Input.mousePosition);
             Vector3 direction = previousPosition - newPosition;
@@ -44,13 +47,28 @@ public class CameraMovement : MonoBehaviour
             flightOffset = cam.transform.position - target.transform.position;
             previousPosition = newPosition;
         }
-        else if (disc.inFlight) {
-            cam.transform.position = target.transform.position + flightOffset;
-        }
-        else if (disc.pickedUp) {
+        else if (discAttr.pickedUp) {
             Vector3 pos = cam.transform.position;
             pos.y = pos.y + 1;
             cam.transform.position = pos;
+        }
+        else if (curDistanceToTarget > distanceToTarget && !discAttr.isThrowable) {
+            // set position of camera
+            Vector3 discVelocity = discRb.velocity.normalized * distanceToTarget;
+            Vector3 targetPosition = target.transform.position - discVelocity;
+            cam.transform.position = Vector3.Lerp(
+                cam.transform.position,
+                targetPosition,
+                Time.deltaTime * (float) Math.Max(Math.Sqrt(discRb.velocity.magnitude), 0.5f)
+            );
+            // set angle of camera
+            cam.transform.LookAt(target.transform.position);
+        }
+
+        // reset disc if "R" is pressed
+        if (Input.GetKeyDown(KeyCode.R)) {
+            Start();
+            cam.transform.LookAt(target.transform.position);
         }
     }
 }

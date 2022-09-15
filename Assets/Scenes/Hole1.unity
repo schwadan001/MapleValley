@@ -305,11 +305,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   disc: {fileID: 783353632}
   cam: {fileID: 963194227}
-  power: 80
-  speed: 12
-  glide: 5
-  turn: -1
-  fade: 2
+  power: 100
 --- !u!114 &783353632
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -458,7 +454,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f2c1082d4aa3789499b4358b12ca7741, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  disc: {fileID: 783353632}
+  discAttr: {fileID: 783353632}
+  discRb: {fileID: 783353636}
   cam: {fileID: 963194227}
   target: {fileID: 783353635}
   distanceToTarget: 2
