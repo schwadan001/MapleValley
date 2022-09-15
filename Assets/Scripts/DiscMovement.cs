@@ -2,11 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
-public class FlightRatings {
+public class DiscInfo {
+    public string name;
     public float speed, glide, turn, fade;
 
-    public FlightRatings(float speed, float glide, float turn, float fade) {
+    public DiscInfo(string name, float speed, float glide, float turn, float fade) {
+        this.name = name;
         this.speed = speed;
         this.glide = glide;
         this.turn = turn;
@@ -17,27 +20,31 @@ public class FlightRatings {
 public class DiscMovement : MonoBehaviour {
     public DiscAttributes disc;
     public Camera cam;
-    public float power = 100;
+    public TextMeshProUGUI discText;
+    public TextMeshProUGUI powerText;
+    public TextMeshProUGUI distanceText;
 
-    private FlightRatings flightRatings;
+    private DiscInfo discInfo;
     private Vector3 cameraVector;
     private Vector3 resetLocation;
     
     private float baseStableSpeed = 16;
     private double stopMagnitude = 0.15;
+    private float power;
     private DateTime throwStartTime;
     private DateTime throwEndTime;
     private Vector3 throwStartPos;
-    private Vector3 throwEndPos;
     private Boolean throwEnded;
-    private string throwType = "backhand";
+    private string throwType = "bh";
 
     void Start () {
         Rigidbody rb = GetComponent<Rigidbody> ();
         rb.maxAngularVelocity = 70;
         
         resetLocation = transform.position;
+
         setDisc("teebird");
+        setPower(100);
     }
 
     /*
@@ -59,7 +66,7 @@ public class DiscMovement : MonoBehaviour {
         // approximate drag
         float airDensity = 1.225f;
         float wingArea = (transform.localScale.x * 0.3f) * (transform.localScale.y * 0.015f);
-        float wingDragCoefficient = 1f - (flightRatings.speed / 25);
+        float wingDragCoefficient = 1f - (discInfo.speed / 25);
         float radius = transform.localScale.x * 0.3f / 2;
         float flightPlateArea = (float)(Mathf.PI * radius * radius);
         float flightPlateDragCoefficient = 1.12f;
@@ -79,7 +86,7 @@ public class DiscMovement : MonoBehaviour {
         // approximate lift
         float angleCutoff = 85;
         float flightAngle = Vector3.Angle(up().normalized, v.normalized);
-        double glideFactor = 0.9 + (flightRatings.glide / 15);
+        double glideFactor = 0.9 + (discInfo.glide / 15);
         float liftForce = (float) Math.Abs (v.magnitude / 10 * glideFactor);
         if (liftForce > 0.1 && flightAngle > angleCutoff) {
             rb.AddForce (up() * (liftForce + liftForce * (flightAngle - angleCutoff) / angleCutoff));
@@ -88,11 +95,11 @@ public class DiscMovement : MonoBehaviour {
         }
 
         // add turn or fade
-        double modifiedTurn = (-flightRatings.turn / 100) + (flightRatings.speed / 500);
-        double modifiedFade = (flightRatings.fade / 50);
-        double stableSpeed = baseStableSpeed + ((flightRatings.turn + flightRatings.fade) / 2) + (flightRatings.speed / 15);
+        double modifiedTurn = (-discInfo.turn / 100) + (discInfo.speed / 500);
+        double modifiedFade = (discInfo.fade / 50);
+        double stableSpeed = baseStableSpeed + ((discInfo.turn + discInfo.fade) / 2) + (discInfo.speed / 15);
 
-        float throwTypeStabilityFactor = (throwType == "forehand" ? 1 : -1);
+        float throwTypeStabilityFactor = (throwType == "fh" ? 1 : -1);
         if (v.magnitude > stableSpeed) {
             transform.RotateAround(
                 new Vector3 (throwTypeStabilityFactor * v.x, 0, throwTypeStabilityFactor * v.z),
@@ -120,7 +127,7 @@ public class DiscMovement : MonoBehaviour {
         disc.pickedUp = false;
         // throw disc
         if (Input.GetKeyDown (KeyCode.Space) && disc.isThrowable) {
-            float throwTypePowerFactor = (throwType == "backhand" ? 1 : 0.9f);
+            float throwTypePowerFactor = (throwType == "bh" ? 1 : 0.9f);
             disc.isThrowable = false;
             disc.inFlight = true;
             rb.isKinematic = false;
@@ -151,9 +158,9 @@ public class DiscMovement : MonoBehaviour {
         } 
         // change throw type
         else if (Input.GetKeyDown (KeyCode.B) && disc.isThrowable) {
-            setThrowType("backhand");
+            setThrowType("bh");
         } else if (Input.GetKeyDown (KeyCode.F) && disc.isThrowable) {
-            setThrowType("forehand");
+            setThrowType("fh");
         }
         // reset disc to original state
         else if (Input.GetKeyDown (KeyCode.R)) {
@@ -189,11 +196,9 @@ public class DiscMovement : MonoBehaviour {
         }
         // change power level
         else if (Input.GetKeyUp(KeyCode.UpArrow) && disc.isThrowable) {
-            power = Math.Min(power + 5, 105);
-            Debug.Log ($"power: {power}%");
+            setPower(power + 5);
         } else if (Input.GetKeyUp(KeyCode.DownArrow) && disc.isThrowable) {
-            power = Math.Max(power - 5, 50);
-            Debug.Log ($"power: {power}%");
+            setPower(power - 5);
         }
         // pick up disc, so it's ready to throw again
         else if (Input.GetMouseButtonDown (1) && !disc.inFlight && disc.canBePickedUp) {
@@ -201,9 +206,15 @@ public class DiscMovement : MonoBehaviour {
             disc.canBePickedUp = false;
             disc.isThrowable = true;
             Vector3 pos = transform.position;
-            pos.y = pos.y + 1;
+            pos.y = pos.y + 0.7f;
             transform.position = pos;
             transform.rotation = Quaternion.Euler(new Vector3(180, 0, 0));
+        }
+
+        // update distance if disc is in flight
+        if (disc.inFlight) {
+            double throwDistance = Math.Round(Math.Abs((transform.position - throwStartPos).magnitude * 3.5));
+            distanceText.text = $"Throw distance: {throwDistance} ft";
         }
 
         // determine if disc has stopped
@@ -215,9 +226,6 @@ public class DiscMovement : MonoBehaviour {
                 rb.isKinematic = true;
                 disc.inFlight = false;
                 disc.canBePickedUp = true;
-                throwEndPos = transform.position;
-                double throwDistance = Math.Round(Math.Abs((throwEndPos - throwStartPos).magnitude * 3.5));
-                Debug.Log ($"Throw distance: {throwDistance} ft");
             }
         } else {
             throwEnded = false;
@@ -242,42 +250,49 @@ public class DiscMovement : MonoBehaviour {
 
     private void setThrowType(string throwType) {
         this.throwType = throwType;
-        Debug.Log ($"Throw type set to {throwType}");
+        discText.text = $"{this.discInfo.name} ({this.throwType})".ToUpper();
+    }
+
+    private void setPower(float power) {
+        if (power >= 50 && power <= 105) {
+            this.power = power;
+            powerText.text = $"Power: {this.power}%";
+        }
     }
 
     private void setDisc(string discType) {
-        Debug.Log ($"Disc selection: {discType}");
         switch (discType) {
             case "destroyer":
-                flightRatings = new FlightRatings(12, 5, -0.5f, 2);
+                discInfo = new DiscInfo(discType, 12, 5, -0.5f, 2);
                 break;
             case "teedevil":
-                flightRatings = new FlightRatings(12, 5, -0.5f, 1);
+                discInfo = new DiscInfo(discType, 12, 5, -0.5f, 1);
                 break;
             case "musket":
-                flightRatings = new FlightRatings(10, 5, -0.5f, 1);
+                discInfo = new DiscInfo(discType, 10, 5, -0.5f, 1);
                 break;
             case "firebird":
-                flightRatings = new FlightRatings(9, 4, 0, 2);
+                discInfo = new DiscInfo(discType, 9, 4, 0, 2);
                 break;
             case "teebird":
-                flightRatings = new FlightRatings(7, 5, 0, 1);
+                discInfo = new DiscInfo(discType, 7, 5, 0, 1);
                 break;
             case "verdict":
-                flightRatings = new FlightRatings(5, 4, 0, 2);
+                discInfo = new DiscInfo(discType, 5, 4, 0, 2);
                 break;
             case "buzzz":
-                flightRatings = new FlightRatings(5, 5, -1, 1);
+                discInfo = new DiscInfo(discType, 5, 5, -1, 1);
                 break;
             case "zone":
-                flightRatings = new FlightRatings(4, 3, 0, 2);
+                discInfo = new DiscInfo(discType, 4, 3, 0, 2);
                 break;
             case "judge":
-                flightRatings = new FlightRatings(2, 4, 0, 1);
+                discInfo = new DiscInfo(discType, 2, 4, 0, 1);
                 break;
             case "berg":
-                flightRatings = new FlightRatings(1, 1, 0, 1);
+                discInfo = new DiscInfo(discType, 1, 1, 0, 1);
                 break;
         }
+        discText.text = $"{this.discInfo.name} ({this.throwType})".ToUpper();
     }
 }

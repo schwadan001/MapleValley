@@ -49,7 +49,7 @@ public class CameraMovement : MonoBehaviour
         }
         else if (discAttr.pickedUp) {
             Vector3 pos = cam.transform.position;
-            pos.y = pos.y + 1;
+            pos.y = pos.y + 0.75f;
             cam.transform.position = pos;
         }
         else if (curDistanceToTarget > distanceToTarget && !discAttr.isThrowable) {
