@@ -54,11 +54,11 @@ public class DiscMovement : MonoBehaviour {
         {"judge", new DiscType("Dynamic Discs Judge", 2, 4, 0, 1)},
         {"zone", new DiscType("Discraft Zone", 4, 3, 0, 3)},
         {"buzzz", new DiscType("Discraft Buzzz", 5, 5, -1, 1)},
-        {"verdict", new DiscType("Dyanmic Discs Verdict", 5, 4, 0, 2)},
+        {"verdict", new DiscType("Dynamic Discs Verdict", 5, 4, 0, 2)},
         {"teebird", new DiscType("Innova Teebird", 7, 5, 0, 1)},
         {"firebird", new DiscType("Innova Firebird", 9, 4, 0, 2)},
         {"musket", new DiscType("Latitude 64 Musket", 10, 5, -0.5f, 1)},
-        {"teedevil", new DiscType("Innova Teedevil", 12, 5, -0.5f, 1)},
+        {"sheriff", new DiscType("Dynamic Discs Sheriff", 12, 5, -0.5f, 1)},
         {"destroyer", new DiscType("Innova Destroyer", 12, 5, -0.5f, 2)}
     };
 
@@ -95,7 +95,7 @@ public class DiscMovement : MonoBehaviour {
         activateDefaultHUD();
 
         // set defaults
-        setDisc("teebird");
+        setDisc("buzzz");
         setPower(100);
     }
 
@@ -117,9 +117,9 @@ public class DiscMovement : MonoBehaviour {
 
         // approximate & apply drag
         float airDensity = 1.225f;
-        float wingArea = (transform.localScale.x * 0.3f) * (transform.localScale.y * 0.015f);
+        float wingArea = 0.3f * 0.015f;
         float wingDragCoefficient = 1f - (discInfo.speed / 25);
-        float radius = transform.localScale.x * 0.3f / 2;
+        float radius = 0.3f / 2;
         float flightPlateArea = (float)(Mathf.PI * radius * radius);
         float flightPlateDragCoefficient = 1.12f;
 
@@ -234,7 +234,7 @@ public class DiscMovement : MonoBehaviour {
             disc.canBePickedUp = false;
             disc.isThrowable = true;
             disc.inFlight = false;
-            transform.rotation = Quaternion.Euler(new Vector3(180, 0, 0));
+            transform.rotation = Quaternion.Euler(new Vector3(0, 0, 0));
             activateDefaultHUD();
         }
 
@@ -286,7 +286,7 @@ public class DiscMovement : MonoBehaviour {
             Vector3 pos = transform.position;
             pos.y = pos.y + 0.7f;
             transform.position = pos;
-            transform.rotation = Quaternion.Euler(new Vector3(180, 0, 0));
+            transform.rotation = Quaternion.Euler(new Vector3(0, 0, 0));
             activateDefaultHUD();
         }
 
@@ -328,7 +328,7 @@ public class DiscMovement : MonoBehaviour {
      */
 
     private Vector3 up() {
-        return -transform.up;
+        return transform.up;
     }
 
     private float degreesToRadians(double degrees) {
@@ -353,6 +353,8 @@ public class DiscMovement : MonoBehaviour {
     private void setDisc(string discType) {
         this.discInfo = this.discTypes[discType];
         this.discText.text = this.discInfo.name;
+        var material = Resources.Load("Discs/Materials/" + this.discInfo.name) as Material;
+        GetComponent<MeshRenderer>().material = material;
         bagContainer.SetActive(false);
     }
 
@@ -406,7 +408,7 @@ public class DiscMovement : MonoBehaviour {
                 setDisc("musket");
                 break;
             case 12:
-                setDisc("teedevil");
+                setDisc("sheriff");
                 break;
             case 13:
                 setDisc("destroyer");
