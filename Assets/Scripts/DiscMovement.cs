@@ -55,7 +55,7 @@ public class DiscMovement : MonoBehaviour {
         {"zone", new DiscType("Discraft Zone", 4, 3, 0, 3)},
         {"buzzz", new DiscType("Discraft Buzzz", 5, 5, -1, 1)},
         {"verdict", new DiscType("Dynamic Discs Verdict", 5, 4, 0, 2)},
-        {"teebird", new DiscType("Innova Teebird", 7, 5, 0, 1)},
+        {"explorer", new DiscType("Latitude 64 Explorer", 7, 5, 0, 1)},
         {"firebird", new DiscType("Innova Firebird", 9, 4, 0, 2)},
         {"musket", new DiscType("Latitude 64 Musket", 10, 5, -0.5f, 1)},
         {"sheriff", new DiscType("Dynamic Discs Sheriff", 12, 5, -0.5f, 1)},
@@ -399,7 +399,7 @@ public class DiscMovement : MonoBehaviour {
                 setDisc("verdict");
                 break;
             case 9:
-                setDisc("teebird");
+                setDisc("explorer");
                 break;
             case 10:
                 setDisc("firebird");
