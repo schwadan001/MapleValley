@@ -286,7 +286,7 @@ public class DiscMovement : MonoBehaviour {
             Vector3 pos = transform.position;
             pos.y = pos.y + 0.7f;
             transform.position = pos;
-            transform.rotation = Quaternion.Euler(new Vector3(0, 0, 0));
+            transform.rotation = Quaternion.Euler(new Vector3(0, 90, 0));
             activateDefaultHUD();
         }
 
