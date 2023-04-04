@@ -59,7 +59,7 @@ public class DiscMovement : MonoBehaviour {
         {"firebird", new DiscType("Innova Firebird", 9, 4, 0, 2)},
         {"musket", new DiscType("Latitude 64 Musket", 10, 5, -0.5f, 1)},
         {"sheriff", new DiscType("Dynamic Discs Sheriff", 12, 5, -0.5f, 1)},
-        {"destroyer", new DiscType("Innova Destroyer", 12, 5, -0.5f, 2)}
+        {"destroyer", new DiscType("Innova Destroyer", 12, 5, 0, 1.5f)}
     };
 
     void Start () {
@@ -344,7 +344,7 @@ public class DiscMovement : MonoBehaviour {
     }
 
     private void setPower(float power) {
-        if (power >= 50 && power <= 105) {
+        if (power >= 50 && power <= 110) {
             this.power = power;
             this.powerText.text = $"Power: {this.power}%";
         }
