@@ -66,9 +66,10 @@ public class CameraMovement : MonoBehaviour
         }
 
         // reset disc if "R" is pressed
-        if (Input.GetKeyDown(KeyCode.R)) {
+        if (Input.GetKeyDown(KeyCode.R) || discAttr.resetFg) {
             Start();
             cam.transform.LookAt(target.transform.position);
+            discAttr.resetFg = false;
         }
     }
 }

@@ -8,4 +8,5 @@ public class DiscAttributes : MonoBehaviour
     public bool inFlight = false;
     public bool canBePickedUp = false;
     public bool pickedUp = true;
+    public bool resetFg = false;
 }

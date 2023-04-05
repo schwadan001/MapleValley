@@ -31,6 +31,7 @@ public class DiscMovement : MonoBehaviour {
     public GameObject forehandButton;
     public GameObject bagButton;
     public GameObject bagContainer;
+    public GameObject resetButton;
 
     private Dictionary<int, GameObject> buttons = new Dictionary<int, GameObject>();
     private int discButtonStartNum;
@@ -47,7 +48,7 @@ public class DiscMovement : MonoBehaviour {
     private DateTime throwStartTime;
     private DateTime throwEndTime;
     private Vector3 throwStartPos;
-    private Boolean throwEnded;
+    private bool throwEnded;
 
     private Dictionary<string, DiscType> discTypes = new Dictionary<string, DiscType> () {
         {"berg", new DiscType("Kastaplast Berg", 1, 1, 0, 1)},
@@ -91,6 +92,13 @@ public class DiscMovement : MonoBehaviour {
         foreach (KeyValuePair<int, GameObject> kv in this.buttons) {
             extractButton(kv.Value).onClick.AddListener(() => buttonClicked(kv.Key));
         }
+
+        extractButton(resetButton).onClick.AddListener(() => {
+            GameObject myEventSystem = GameObject.Find("EventSystem");
+            myEventSystem.GetComponent<UnityEngine.EventSystems.EventSystem>().SetSelectedGameObject(null);
+            disc.resetFg = true; 
+        });
+
         deactivateHUD();
         activateDefaultHUD();
 
@@ -227,7 +235,7 @@ public class DiscMovement : MonoBehaviour {
         }
 
         // reset disc to original state
-        else if (Input.GetKeyDown (KeyCode.R)) {
+        else if (Input.GetKeyDown (KeyCode.R) || disc.resetFg) {
             rb.isKinematic = true;
             transform.position = resetLocation;
             disc.pickedUp = true;
