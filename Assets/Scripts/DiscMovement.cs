@@ -242,7 +242,7 @@ public class DiscMovement : MonoBehaviour {
             disc.canBePickedUp = false;
             disc.isThrowable = true;
             disc.inFlight = false;
-            transform.rotation = Quaternion.Euler(new Vector3(0, 0, 0));
+            transform.rotation = Quaternion.Euler(new Vector3(0, 90, 0));
             activateDefaultHUD();
         }
 
