@@ -292,7 +292,7 @@ public class DiscMovement : MonoBehaviour {
             disc.canBePickedUp = false;
             disc.isThrowable = true;
             Vector3 pos = transform.position;
-            pos.y = pos.y + 0.7f;
+            pos.y = pos.y + 0.8f;
             transform.position = pos;
             transform.rotation = Quaternion.Euler(new Vector3(0, 90, 0));
             activateDefaultHUD();
@@ -328,6 +328,11 @@ public class DiscMovement : MonoBehaviour {
             Debug.Log ("Magnitude: " + v.magnitude);
             Debug.Log ("Velocity: " + v.normalized);
             Debug.Log ("Camera: " + cameraVector);
+            Debug.Log ("isThrowable: " + disc.isThrowable);
+            Debug.Log ("inFlight: " + disc.inFlight);
+            Debug.Log ("canBePickedUp: " + disc.canBePickedUp);
+            Debug.Log ("pickedUp: " + disc.pickedUp);
+            Debug.Log ("resetFg: " + disc.resetFg);
         }
     }
 
